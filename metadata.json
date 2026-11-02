@@ -1,0 +1,7 @@
+{
+  "name": "Vertex Customs - Neon Glass Vehicle Customizer",
+  "description": "Full-stack automotive vehicle modification platform with real-time neon glass 2D customizer, Web Audio engine synthesizer, parts database, user project gallery, and operational command workshop dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
