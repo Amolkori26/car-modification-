@@ -16,9 +16,13 @@ import {
 
 interface PartsDatabaseProps {
   onSelectPartForBuild?: (part: PartItem) => void;
+  onNavigateToBooking?: () => void;
 }
 
-export const PartsDatabase: React.FC<PartsDatabaseProps> = ({ onSelectPartForBuild }) => {
+export const PartsDatabase: React.FC<PartsDatabaseProps> = ({
+  onSelectPartForBuild,
+  onNavigateToBooking,
+}) => {
   const [parts, setParts] = useState<PartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -267,10 +271,14 @@ export const PartsDatabase: React.FC<PartsDatabaseProps> = ({ onSelectPartForBui
               <button
                 onClick={() => {
                   setActiveModalPart(null);
-                  const el = document.getElementById('booking');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  if (onNavigateToBooking) {
+                    onNavigateToBooking();
+                  } else {
+                    const el = document.getElementById('booking');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
                 }}
-                className="px-6 py-2.5 rounded-xl text-xs font-bold text-neutral-950 bg-lime-400 hover:bg-lime-300 transition-colors"
+                className="px-6 py-2.5 rounded-xl text-xs font-bold text-neutral-950 bg-lime-400 hover:bg-lime-300 transition-colors cursor-pointer"
               >
                 Book Installation
               </button>

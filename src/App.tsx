@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
+import { LoginPage } from './components/LoginPage';
+import { HomePage } from './components/HomePage';
 import { Visualizer } from './components/Visualizer';
 import { BeforeAfter } from './components/BeforeAfter';
 import { PartsDatabase } from './components/PartsDatabase';
@@ -14,26 +15,43 @@ import { Services } from './components/Services';
 import { BookingForm } from './components/BookingForm';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Footer } from './components/Footer';
-import { Booking, BookingConfig, PartItem } from './types';
-import { Activity } from 'lucide-react';
+import { AppPage, Booking, BookingConfig, PartItem, UserSession } from './types';
 
 export default function App() {
-  // Shared Root State for Bookings (State Lifting as specified in project report)
+  // Authentication Gateway State (Gates website entrance before opening)
+  const [currentUser, setCurrentUser] = useState<UserSession | null>(() => {
+    try {
+      const saved = localStorage.getItem('vertex_user_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        parsed.avatar = '';
+        return parsed;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // Dedicated Page Routing State (Defaults to 'home')
+  const [currentPage, setCurrentPage] = useState<AppPage>('home');
+
+  // Shared Root State for Bookings (State Lifting as specified in capstone report)
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
 
-  // Cross-component coordination states:
-  // Pre-filling booking form from visualizer
+  // Cross-page coordination states:
+  // Pre-filling booking form from customizer
   const [bookingPrefillConfig, setBookingPrefillConfig] = useState<BookingConfig | null>(null);
   const [bookingPrefillVehicle, setBookingPrefillVehicle] = useState<string>('Nissan GT-R R35 Nismo');
   const [bookingPrefillPrice, setBookingPrefillPrice] = useState<number>(14500);
 
-  // Gallery publish modal trigger from visualizer
+  // Gallery publish modal trigger from customizer
   const [galleryPublishConfig, setGalleryPublishConfig] = useState<BookingConfig | null>(null);
   const [galleryPublishVehicle, setGalleryPublishVehicle] = useState<string>('');
   const [isGalleryPublishOpen, setIsGalleryPublishOpen] = useState(false);
 
-  // Initial fetch of shared booking records
+  // Initial fetch of shared booking records from backend
   useEffect(() => {
     const fetchInitialBookings = async () => {
       try {
@@ -52,6 +70,41 @@ export default function App() {
     fetchInitialBookings();
   }, []);
 
+  // Authentication Handlers
+  const handleLogin = (session: UserSession) => {
+    setCurrentUser(session);
+    try {
+      localStorage.setItem('vertex_user_session', JSON.stringify(session));
+    } catch (e) {
+      console.warn('Could not persist session to localStorage', e);
+    }
+    setCurrentPage('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('vertex_user_session');
+    } catch (e) {
+      console.warn('Could not clear session', e);
+    }
+    setCurrentPage('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  const handleNavigate = (page: AppPage) => {
+    // Restrict Parts Database access to Admin login only
+    if (page === 'parts' && currentUser?.role !== 'admin') {
+      setCurrentPage('home');
+      return;
+    }
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Callback when customer submits 3-step booking form
   const handleAddBooking = (newBooking: Booking) => {
     setBookings((prev) => [newBooking, ...prev]);
@@ -69,12 +122,8 @@ export default function App() {
     setBookingPrefillConfig(config);
     setBookingPrefillVehicle(vehicleName);
     setBookingPrefillPrice(calculatedPrice);
-
-    // Smooth scroll to booking form
-    const bookingEl = document.getElementById('booking');
-    if (bookingEl) {
-      bookingEl.scrollIntoView({ behavior: 'smooth' });
-    }
+    setCurrentPage('booking');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // When user clicks "Publish To User Gallery" in visualizer
@@ -82,91 +131,123 @@ export default function App() {
     setGalleryPublishConfig(config);
     setGalleryPublishVehicle(vehicleName);
     setIsGalleryPublishOpen(true);
-
-    const galleryEl = document.getElementById('gallery');
-    if (galleryEl) {
-      galleryEl.scrollIntoView({ behavior: 'smooth' });
-    }
+    setCurrentPage('gallery');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // When user clicks "Configure in Workshop" on a parts catalog item
   const handleSelectPartForBuild = (part: PartItem) => {
-    const customizerEl = document.getElementById('customizer');
-    if (customizerEl) {
-      customizerEl.scrollIntoView({ behavior: 'smooth' });
-    }
+    setCurrentPage('customizer');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // When user selects a service package
+  const handleSelectService = (serviceName: string) => {
+    setCurrentPage('booking');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 1. GATEWAY: If not authenticated, render Login Page before entering website
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  // 2. MAIN APPLICATION: Authenticated Multi-Page Experience
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Navigation Header */}
-      <Navbar activeBookingsCount={bookings.length} />
+      {/* Navigation Header - Integrated with Dashboard item in menu bar and active user info */}
+      <Navbar
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        activeBookingsCount={bookings.length}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
 
-      {/* Main Experience Flows */}
-      <main className="flex-1">
-        {/* 1. Hero & Value Proposition */}
-        <Hero />
+      {/* Main Dedicated Page Viewport */}
+      <main className="flex-1 pt-20">
+        {currentPage === 'home' && (
+          <HomePage
+            onNavigate={handleNavigate}
+            activeBookingsCount={bookings.length}
+            isAdmin={isAdmin}
+          />
+        )}
 
-        {/* 2. Interactive 2D Vehicle Customizer with Web Audio Engine Synth */}
-        <Visualizer
-          onSelectForBooking={handleSelectForBooking}
-          onOpenGalleryPublish={handleOpenGalleryPublish}
-        />
+        {currentPage === 'customizer' && (
+          <div className="py-6">
+            <Visualizer
+              onSelectForBooking={handleSelectForBooking}
+              onOpenGalleryPublish={handleOpenGalleryPublish}
+            />
+          </div>
+        )}
 
-        {/* 3. Touch-Enabled Before / After Telemetry Split Slider */}
-        <BeforeAfter />
+        {currentPage === 'comparison' && (
+          <div className="py-6">
+            <BeforeAfter />
+          </div>
+        )}
 
-        {/* 4. Complete Parts Database & Stock Catalog */}
-        <PartsDatabase onSelectPartForBuild={handleSelectPartForBuild} />
+        {currentPage === 'parts' && (
+          isAdmin ? (
+            <div className="py-6">
+              <PartsDatabase
+                onSelectPartForBuild={handleSelectPartForBuild}
+                onNavigateToBooking={() => handleNavigate('booking')}
+              />
+            </div>
+          ) : (
+            <HomePage
+              onNavigate={handleNavigate}
+              activeBookingsCount={bookings.length}
+              isAdmin={false}
+            />
+          )
+        )}
 
-        {/* 5. Custom Project Galleries for Users with Likes & Publishing */}
-        <UserGallery
-          initialConfigToPublish={galleryPublishConfig}
-          initialVehicleName={galleryPublishVehicle}
-          isPublishModalOpen={isGalleryPublishOpen}
-          onClosePublishModal={() => setIsGalleryPublishOpen(false)}
-        />
+        {currentPage === 'gallery' && (
+          <div className="py-6">
+            <UserGallery
+              initialConfigToPublish={galleryPublishConfig}
+              initialVehicleName={galleryPublishVehicle}
+              isPublishModalOpen={isGalleryPublishOpen}
+              onClosePublishModal={() => setIsGalleryPublishOpen(false)}
+              onNavigateToCustomizer={() => handleNavigate('customizer')}
+            />
+          </div>
+        )}
 
-        {/* 6. Precision Engineering Workshop Services */}
-        <Services />
+        {currentPage === 'services' && (
+          <div className="py-6">
+            <Services onSelectService={handleSelectService} />
+          </div>
+        )}
 
-        {/* 7. Three-Step Customer Booking & Bay Scheduling Form */}
-        <BookingForm
-          initialConfig={bookingPrefillConfig}
-          initialVehicle={bookingPrefillVehicle}
-          initialPrice={bookingPrefillPrice}
-          onBookingCreated={handleAddBooking}
-        />
+        {currentPage === 'booking' && (
+          <div className="py-6">
+            <BookingForm
+              initialConfig={bookingPrefillConfig}
+              initialVehicle={bookingPrefillVehicle}
+              initialPrice={bookingPrefillPrice}
+              onBookingCreated={handleAddBooking}
+              onNavigateToDashboard={() => handleNavigate('dashboard')}
+            />
+          </div>
+        )}
 
-        {/* 8. Operational Command Dashboard (Bay allocation, queue triage, inventory reorder) */}
-        <AdminDashboard
-          bookings={bookings}
-          onUpdateBooking={handleUpdateBooking}
-        />
+        {currentPage === 'dashboard' && (
+          <div className="py-6">
+            <AdminDashboard
+              bookings={bookings}
+              onUpdateBooking={handleUpdateBooking}
+            />
+          </div>
+        )}
       </main>
 
-      {/* Persistent Floating Quick Action Button: Open Dashboard */}
-      <a
-        href="#admin-portal"
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-neutral-900/90 hover:bg-neutral-800 border border-cyan-400/60 text-cyan-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.4)] backdrop-blur-xl transition-all hover:scale-105 group cursor-pointer"
-        aria-label="Open Command Dashboard"
-      >
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
-        </span>
-        <Activity className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" />
-        <span className="hidden sm:inline">Open Dashboard</span>
-        <span className="sm:hidden">Dashboard</span>
-        {bookings.length > 0 && (
-          <span className="px-1.5 py-0.5 rounded-full bg-lime-400 text-neutral-950 text-[10px] font-bold">
-            {bookings.length}
-          </span>
-        )}
-      </a>
-
-      {/* Footer with Capstone Attributions to Amol Kori */}
-      <Footer />
+      {/* Footer with Capstone Attributions */}
+      <Footer onNavigate={handleNavigate} isAdmin={isAdmin} />
     </div>
   );
 }

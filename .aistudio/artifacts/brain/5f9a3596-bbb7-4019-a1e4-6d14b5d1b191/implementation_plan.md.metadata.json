@@ -1,0 +1,6 @@
+{
+  "summary":  "Architecture blueprint for transitioning Vertex Customs into a multi-page web platform with an entrance authentication gateway, role-based demo profiles, top menu bar Dashboard integration, and dedicated standalone views for customizer, comparison, parts database, galleries, services, and workshop booking.",
+  "updatedAt":  "2026-11-02T14:28:17.780916257Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

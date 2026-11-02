@@ -20,6 +20,7 @@ interface UserGalleryProps {
   initialVehicleName?: string;
   isPublishModalOpen?: boolean;
   onClosePublishModal?: () => void;
+  onNavigateToCustomizer?: () => void;
 }
 
 export const UserGallery: React.FC<UserGalleryProps> = ({
@@ -27,6 +28,7 @@ export const UserGallery: React.FC<UserGalleryProps> = ({
   initialVehicleName = '',
   isPublishModalOpen = false,
   onClosePublishModal,
+  onNavigateToCustomizer,
 }) => {
   const [projects, setProjects] = useState<GalleryProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -279,11 +281,9 @@ export const UserGallery: React.FC<UserGalleryProps> = ({
               {/* Card Footer: Owner & Stats */}
               <div className="px-6 py-4 border-t border-neutral-800/80 bg-neutral-950/40 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={project.ownerAvatar}
-                    alt={project.ownerName}
-                    className="w-8 h-8 rounded-full object-cover border border-neutral-700"
-                  />
+                  <div className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center font-mono text-xs font-bold text-fuchsia-400">
+                    {project.ownerName ? project.ownerName.charAt(0) : 'U'}
+                  </div>
                   <div>
                     <span className="text-xs font-bold text-neutral-200 block">{project.ownerName}</span>
                     <span className="text-[10px] text-neutral-400 font-mono">Build Time: {project.buildTime}</span>
@@ -378,10 +378,14 @@ export const UserGallery: React.FC<UserGalleryProps> = ({
               <button
                 onClick={() => {
                   setInspectProject(null);
-                  const el = document.getElementById('customizer');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  if (onNavigateToCustomizer) {
+                    onNavigateToCustomizer();
+                  } else {
+                    const el = document.getElementById('customizer');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
                 }}
-                className="px-5 py-2.5 rounded-xl bg-lime-400 text-neutral-950 font-bold text-xs uppercase"
+                className="px-5 py-2.5 rounded-xl bg-lime-400 text-neutral-950 font-bold text-xs uppercase cursor-pointer"
               >
                 Customize Similar Build
               </button>

@@ -103,3 +103,23 @@ export interface VehiclePreset {
   accel: string;
   basePrice: number;
 }
+
+export type AppPage =
+  | 'home'
+  | 'customizer'
+  | 'comparison'
+  | 'parts'
+  | 'gallery'
+  | 'services'
+  | 'booking'
+  | 'dashboard';
+
+export interface UserSession {
+  id: string;
+  name: string;
+  role: 'client' | 'admin';
+  email: string;
+  avatar: string;
+  garageCount?: number;
+}
+

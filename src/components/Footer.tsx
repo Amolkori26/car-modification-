@@ -1,7 +1,20 @@
 import React from 'react';
+import { AppPage } from '../types';
 import { Sparkles, Code2, Cpu, Wrench, ShieldCheck, Heart } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate?: (page: AppPage) => void;
+  isAdmin?: boolean;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigate, isAdmin = false }) => {
+  const handleLinkClick = (page: AppPage, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onNavigate) {
+      onNavigate(page);
+    }
+  };
+
   return (
     <footer className="relative bg-neutral-950 border-t border-neutral-800/80 pt-16 pb-12 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
@@ -35,33 +48,58 @@ export const Footer: React.FC = () => {
           {/* Quick Links */}
           <div>
             <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white mb-4">
-              Platform Features
+              Platform Pages
             </h4>
-            <ul className="space-y-2 text-xs text-neutral-400">
+            <ul className="space-y-2 text-xs text-neutral-400 font-mono">
               <li>
-                <a href="#customizer" className="hover:text-lime-400 transition-colors">
+                <button
+                  onClick={(e) => handleLinkClick('customizer', e)}
+                  className="hover:text-lime-400 transition-colors cursor-pointer text-left"
+                >
                   2D Vehicle Customizer
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#comparison" className="hover:text-lime-400 transition-colors">
+                <button
+                  onClick={(e) => handleLinkClick('comparison', e)}
+                  className="hover:text-lime-400 transition-colors cursor-pointer text-left"
+                >
                   Before / After Split Slider
-                </a>
+                </button>
               </li>
+              {isAdmin && (
+                <li>
+                  <button
+                    onClick={(e) => handleLinkClick('parts', e)}
+                    className="hover:text-lime-400 transition-colors cursor-pointer text-left"
+                  >
+                    Parts Database & Inventory (₹)
+                  </button>
+                </li>
+              )}
               <li>
-                <a href="#parts" className="hover:text-lime-400 transition-colors">
-                  Parts Database & Inventory
-                </a>
-              </li>
-              <li>
-                <a href="#gallery" className="hover:text-lime-400 transition-colors">
+                <button
+                  onClick={(e) => handleLinkClick('gallery', e)}
+                  className="hover:text-lime-400 transition-colors cursor-pointer text-left"
+                >
                   Custom User Project Galleries
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#booking" className="hover:text-lime-400 transition-colors">
+                <button
+                  onClick={(e) => handleLinkClick('booking', e)}
+                  className="hover:text-lime-400 transition-colors cursor-pointer text-left"
+                >
                   Three-Step Bay Reservation
-                </a>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={(e) => handleLinkClick('dashboard', e)}
+                  className="hover:text-cyan-400 transition-colors cursor-pointer text-left"
+                >
+                  Workshop Command Terminal
+                </button>
               </li>
             </ul>
           </div>
@@ -87,7 +125,7 @@ export const Footer: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1 text-neutral-400">
-              Zero-latency SPA Architecture
+              Zero-latency Multi-Page Architecture
             </span>
           </div>
         </div>

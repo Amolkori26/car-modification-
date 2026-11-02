@@ -27,6 +27,7 @@ interface BookingFormProps {
   initialVehicle?: string;
   initialPrice?: number;
   onBookingCreated: (booking: Booking) => void;
+  onNavigateToDashboard?: () => void;
 }
 
 export const BookingForm: React.FC<BookingFormProps> = ({
@@ -34,6 +35,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   initialVehicle = 'Nissan GT-R R35 Nismo',
   initialPrice = 14500,
   onBookingCreated,
+  onNavigateToDashboard,
 }) => {
   // Step tracker: 1, 2, 3, or 'confirmed'
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 'confirmed'>(1);
@@ -551,10 +553,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({
               </button>
               <button
                 onClick={() => {
-                  const el = document.getElementById('admin-portal');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  if (onNavigateToDashboard) {
+                    onNavigateToDashboard();
+                  } else {
+                    const el = document.getElementById('admin-portal');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
                 }}
-                className="px-6 py-2.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-neutral-950 font-bold text-xs uppercase"
+                className="px-6 py-2.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-neutral-950 font-bold text-xs uppercase cursor-pointer"
               >
                 Track In Command Dashboard
               </button>
